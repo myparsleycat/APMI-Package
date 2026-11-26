@@ -12,6 +12,8 @@ The original 2026-11-26 dump at `dist/APMI/FrameAnalysis-2026-11-26-113431/` in 
 
 Live frame 431458 showed five `DrawIndexed` calls for `d9cf7935`. Two layouts read float3 `TEXCOORD5` in `vb3`. The nine observed previous-position VS hashes use explicit filter index 2 because XXMI returns 1 for a shader matched by the general regex without a filter. Evidence is launcher `build/ap-efmi-entrypoint-reference/reference.json`.
 
+The field capture at 17:30 matched IB `6ee9b2ad` with 80,016 indices in draws 001189 and 001190. Core found the current palette and skipped the replacement because the previous palette timestamp was zero. Core now binds the replacement's current skinned position buffer to `vb3` when a pass needs previous positions and the previous palette is missing or stale. A valid previous palette still gets its own dispatch. When the current palette is unavailable, Core leaves the native draw in place.
+
 ## Verification on 2026-11-26
 
 | Scenario | Observation | Evidence |
@@ -22,5 +24,7 @@ Live frame 431458 showed five `DrawIndexed` calls for `d9cf7935`. Two layouts re
 | Worker integration, Core 0.2.2 | The normal fixture rendered 90 frames. Timeout, cancellation, lock, stale log, missing DLL, early exit and already-running checks passed. | Launcher `build/tests/9d1bb468cf/` |
 | Live character, Core 0.2.2 | AP PID 7776 frame 505651 captured five replacement draws and seven compute calls for `d9cf7935`. Index and attribute bytes matched. Maximum current and previous pose error was `1.192e-7`. F11 restored five native draws at frame 505875. The mod was archived outside Mods and F10 restored native draws and the Core overlay at frame 506393. | Launcher `build/ap-current-character-efmi-0.2.2-final/verified.json` and `roundtrip/verification.json` |
 | Earlier live template, Core 0.2.1 | AP PID 7776 frame 377101 had one native skin dispatch and five replacement draws. F11 and cleanup restored the normal scene. | Launcher `build/ap-current-character-efmi-0.2.1/verified.json` |
+| Field palette fallback | A private XXMI/D3D11 probe reproduced the skipped draw with the original Core. The patched Core passed missing, stale and valid previous palettes, missing current palette and a pass without previous positions. | `build/field-fallback-xxmi/` |
+| Field fix regression | WARP matched 11 native skinning dispatches with maximum error `3.576e-7`. A Blender 5.2.2 round trip preserved all eight buffers across two components. | `build/field-fallback-warp.json` and `build/field-fallback-roundtrip-174045369/` |
 
-See [Known issues](KNOWN_ISSUES.md) for remaining coverage. [LoyalTools integration plan](../docs/LOYALTOOLS_PLAN.md) records the proposed entry points in the existing add-on. LoyalTools has only been read. Work is local, with slot cache deferred and release publication postponed.
+See [Known issues](KNOWN_ISSUES.md) for remaining coverage. [LoyalTools integration plan](../docs/LOYALTOOLS_PLAN.md) records the proposed entry points in the existing add-on. LoyalTools has only been read. Slot caching and release publication remain deferred.
