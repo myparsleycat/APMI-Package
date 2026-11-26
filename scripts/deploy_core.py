@@ -35,7 +35,7 @@ for relative in ('Skinning.ini', 'Shaders/Skinning.hlsl'):
     old_file = target / 'Core/APMI' / relative
     old_file.unlink(missing_ok=True)
 ini.write_text(updated, encoding='utf-8', newline='')
-report = {'target': str(target), 'backup': str(backup), 'core': 'APMIv1 0.2.2 DEV',
+report = {'target': str(target), 'backup': str(backup), 'core': 'APMIv1 0.3.0',
           'files': {str(p.relative_to(target)): hashlib.sha256(p.read_bytes()).hexdigest()
                     for p in (target / 'Core/APMI').rglob('*') if p.is_file()},
           'previous_ini_sha256': hashlib.sha256(original).hexdigest(),

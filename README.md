@@ -1,6 +1,6 @@
 # APMI Package
 
-Azur Promilia runtime configuration and APMI Core 0.2.2, with frame-dump extraction and standalone Blender import/export tools.
+Azur Promilia runtime configuration and APMI Core 0.3.0, with frame-dump extraction and standalone Blender import/export tools.
 
 Use this directory as the APMI Package in [APMI Launcher](https://github.com/loyal37/APMI-Launcher) after supplying the compatible XXMI 1.3.3 `d3d11.dll` and `d3dcompiler_47.dll`. The runtime files are `d3dx.ini` and `Core/APMI/`. Put mod folders in `Mods/`.
 
