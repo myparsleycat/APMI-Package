@@ -8,7 +8,7 @@
 - Blender 4.5.7 导入、保存、重新打开并导出后，未改动的 61 份缓冲逐字节一致。
 - 修改顶点、UV、顶点色、权重及拓扑；共享属性展开、UV 拆点、镜像绕序和法线/切线生成已有测试。
 - 导出沿用 EFMI 合并骨骼模板的 `TextureOverride_EntryPoint_ComponentN`、`CommandList_Component_DrawInstances` 和 `CommandList_Draw_ComponentN`。资源名和缓冲文件名按 LoyalTools 的组件标识生成。AP Core 负责蒙皮并沿用当前组件的原生骨骼调色板。
-- 当前角色的 `d9cf7935` 已从 MCP 帧提取并经 Blender 往返。Core 0.2.2 在实机验证了该组件的蒙皮和五次替换绘制。见 [验证记录](../.ai-memory/SESSION_LOG.md)。
+- 当前角色的 `d9cf7935` 已从 MCP 帧提取并经 Blender 往返。Core 0.2.2 在实机验证了该组件的蒙皮和五次替换绘制。见 [验证记录](../README.md#verification)。
 
 其他组件、移动时的视觉效果和 LOD 转换继续按实机证据验收。整帧可以包含多个模型或 LOD，提取时由用户选择组件。
 

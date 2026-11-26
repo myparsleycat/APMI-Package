@@ -67,4 +67,4 @@ py -3.12 tests/core_runtime.py --launcher 'F:/APMI Launcher' --native-shader 'F:
 
 The Blender regression uses specific IBs from the supplied capture. The runtime fixture uses AP's captured one-weight shader on its own mesh. Worker tests use private package copies.
 
-Read [.ai-memory/CURRENT_STATE.md](.ai-memory/CURRENT_STATE.md) and [.ai-memory/TASKS.md](.ai-memory/TASKS.md) when resuming. The proposed addon work is described in [the LoyalTools integration plan](docs/LOYALTOOLS_PLAN.md); no LoyalTools files have been changed.
+The proposed addon work is described in [the LoyalTools integration plan](docs/LOYALTOOLS_PLAN.md). No LoyalTools files have been changed.
