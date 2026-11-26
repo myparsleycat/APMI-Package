@@ -1,0 +1,14 @@
+/build/
+/test-output/
+/Mods/
+/ShaderCache/
+/ShaderFixes/
+/ShaderFromGame/
+/FrameAnalysis-*/
+/d3d11.dll
+/d3dcompiler_47.dll
+/d3d11_log.txt
+/d3dx_user.ini
+*.bin
+__pycache__/
+*.pyc
