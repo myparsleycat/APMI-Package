@@ -95,7 +95,8 @@ int wmain(int argc, wchar_t** argv) {
         }
         if (argc != 6) throw std::runtime_error("skin_gpu shader rest blend bones output");
         const auto rest = read(argv[2]), blend = read(argv[3]), bones = read(argv[4]);
-        if (rest.empty() || rest.size() % 40 || blend.size() != rest.size() / 40 * 32 || bones.size() % 64)
+        if (rest.empty() || rest.size() % 40 || (blend.size() != rest.size() / 40 * 32 &&
+                                                 blend.size() != rest.size() / 40 * 64) || bones.size() % 64)
             throw std::runtime_error("Invalid buffer size");
         ComPtr<ID3D11Device> device;
         ComPtr<ID3D11DeviceContext> context;

@@ -6,7 +6,7 @@ import re
 import struct
 import subprocess
 
-from ap_tools.skinning import VARIANTS, decode_blend, skin
+from ap_tools.skinning import MAX_VARIABLE_INFLUENCES, VARIABLE, VARIANTS, decode_blend, decode_variable_blend, skin
 
 
 def main():
@@ -18,7 +18,7 @@ def main():
     checks = []
     for source in sorted(args.dump.glob("*-cs-t0=*-cs=*.buf")):
         match = re.search(r"^(\d+)-cs-t0=.*-cs=([0-9a-f]{16})\.buf$", source.name)
-        if not match or match[2] not in VARIANTS:
+        if not match or (match[2] not in VARIANTS and match[2] not in VARIABLE):
             continue
         number, shader = match.groups()
         def read(slot):
@@ -27,16 +27,24 @@ def main():
                 raise ValueError(f"Ambiguous/missing {number} {slot}")
             return files[0].read_bytes()
         count, = struct.unpack_from("<I", read("cs-cb0"))
-        result = skin(source.read_bytes(), read("cs-t1"), read("cs-t2"), VARIANTS[shader], count)
+        if shader in VARIABLE:
+            blends = list(decode_variable_blend(read("cs-t1"), count))
+            influences = max(len(weights) for weights, _ in blends)
+            width = MAX_VARIABLE_INFLUENCES
+        else:
+            blends = list(decode_blend(read("cs-t1"), VARIANTS[shader], count))
+            influences = VARIANTS[shader]
+            width = 4
+        result = skin(source.read_bytes(), blends, read("cs-t2"), None, count)
         if args.gpu:
             folder = args.out.parent / "gpu-inputs" / number
             folder.mkdir(parents=True, exist_ok=True)
             (folder / "rest.buf").write_bytes(source.read_bytes()[:count * 40])
             (folder / "bones.buf").write_bytes(read("cs-t2"))
             canonical = bytearray()
-            for weights, indices in decode_blend(read("cs-t1"), VARIANTS[shader], count):
-                canonical.extend(struct.pack("<4f4I", *(list(weights) + [0.0] * (4 - len(weights))),
-                                             *(list(indices) + [0] * (4 - len(indices)))))
+            for weights, indices in blends:
+                canonical.extend(struct.pack(f"<{width}f{width}I", *(list(weights) + [0.0] * (width - len(weights))),
+                                             *(list(indices) + [0] * (width - len(indices)))))
             (folder / "blend.buf").write_bytes(canonical)
             program = Path(__file__).resolve().parents[1] / "Core/APMI/Shaders/MeshSkinner.hlsl"
             subprocess.run([str(args.gpu.resolve()), str(program), str(folder / "rest.buf"),
@@ -49,7 +57,7 @@ def main():
         max_error = max(abs(a-b) for a,b in zip(lhs, rhs))
         scale = max(1.0, max(abs(v) for v in rhs))
         ok = max_error <= 2e-5 * scale
-        checks.append(dict(dispatch=int(number), shader=shader, influences=VARIANTS[shader], vertices=count,
+        checks.append(dict(dispatch=int(number), shader=shader, influences=influences, vertices=count,
                            max_error=max_error, relative_tolerance=2e-5, passed=ok))
     report = dict(dump=str(args.dump.resolve()), implementation="WARP HLSL" if args.gpu else "CPU", checks=checks,
                   passed=bool(checks) and all(c["passed"] for c in checks))
