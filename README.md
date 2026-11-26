@@ -1,6 +1,6 @@
 # APMI Package
 
-Azur Promilia runtime configuration and APMI Core 0.3.1, with frame-dump extraction and standalone Blender import/export tools.
+Azur Promilia runtime configuration and APMI Core, with frame-dump extraction and standalone Blender import/export tools.
 
 Use this directory as the APMI Package in [APMI Launcher](https://github.com/loyal37/APMI-Launcher) after supplying the compatible XXMI 1.3.3 `d3d11.dll` and `d3dcompiler_47.dll`. The runtime files are `d3dx.ini` and `Core/APMI/`. Put mod folders in `Mods/`.
 
@@ -42,6 +42,22 @@ Omit `--ib` to extract all recognized components, or repeat it to select several
 Blender objects retain AP's native coordinates, component identity, source-vertex references, UVs, point colors and `Bone_####` vertex groups. Preserve the `ap_source_vertex` attribute. Apply mesh modifiers before exporting. A component supports one to four nonzero weights per vertex, within its captured palette. UV seams create new exported vertices as needed. Shared zero-stride attributes expand to a per-vertex stream when edited. Mirrored object transforms reverse triangle winding. `--recalculate-normals` regenerates normals and tangents; the default preserves original normal/tangent bytes.
 
 The standalone tools retain texture binding evidence and extract DDS files. Geometry-only round trips preserve the game's material bindings. Use APMI-Tools for Blender export with a field capture and Merged Skeleton.
+
+## Release
+
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/). Since the previous release tag, `fix:` commits produce a patch release, `feat:` commits a minor release and `BREAKING CHANGE` footers a major release.
+
+Run the **Draft Release** workflow on `main` from GitHub Actions. It calculates the next version with semantic-release, writes it into the packaged `Core/APMI/main.ini`, signs the zip with the `APMI_SIGNING_KEY` repository secret and creates a draft release with the zip and its signature. Review the draft, then publish it to create the tag. The repository `main.ini` keeps the version of the last manual update.
+
+`global $version` stores X.Y.Z as `X.YZ`, and mods compare it as a number. Minor and patch versions must therefore be 0-9, and the workflow fails for any other version. When the patch version is 9, the next release needs a `feat:` commit. When the minor version is 9, a release that would raise it needs a `BREAKING CHANGE` footer instead.
+
+To package locally:
+
+```powershell
+py -3.12 scripts/package_release.py --version 0.3.2 --key '<private-key.pem>' --notes-file notes.md
+```
+
+Without `--version`, the version is read from `Core/APMI/main.ini`. Output is written to `build/release/`.
 
 ## Verification
 
