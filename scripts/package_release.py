@@ -32,14 +32,16 @@ args = parser.parse_args()
 
 if not args.allow_dirty and git('status', '--porcelain', '--', *PACKAGE_PATHS).strip():
     raise SystemExit('Package files have uncommitted changes; commit them or pass --allow-dirty')
-files = sorted(name for name in git('ls-files', '-z', '--', *PACKAGE_PATHS).split('\0') if name)
+flags = ('--cached', '--others', '--exclude-standard') if args.allow_dirty else ('--cached',)
+files = sorted({name for name in git('ls-files', '-z', *flags, '--', *PACKAGE_PATHS).split('\0') if name})
 version = read_version()
 out = ROOT / 'build' / 'release'
 out.mkdir(parents=True, exist_ok=True)
 archive = out / f'APMI-PACKAGE-v{version}.zip'
 with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
     for name in files:
-        zf.write(ROOT / name, name)
+        if (ROOT / name).is_file():
+            zf.write(ROOT / name, name)
 print(f'{archive} ({len(files)} files)')
 
 if args.key:

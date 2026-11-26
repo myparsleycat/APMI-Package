@@ -9,6 +9,26 @@ import shutil
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def enable_constant_buffer_cache(rendering):
+    setting = r'(?im)^([ \t]*cache_resource_data[ \t]*=[ \t]*)([^;\r\n]*)'
+
+    def add_constant_buffer(match):
+        flags = match[2].split()
+        if {'all', 'constant_buffer'}.intersection(flag.lower() for flag in flags):
+            return match[0]
+        flags = [flag for flag in flags if flag.lower() != 'none']
+        return match[1] + ' '.join([*flags, 'constant_buffer']) + (' ' if match[2].endswith(' ') else '')
+
+    configured, count = re.subn(setting, add_constant_buffer, rendering)
+    if count:
+        return configured
+    end = rendering.index('\n') + 1
+    newline = '\r\n' if rendering[:end].endswith('\r\n') else '\n'
+    return rendering[:end] + 'cache_resource_data = constant_buffer' + newline + rendering[end:]
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('target', type=Path)
 args = parser.parse_args()
@@ -22,6 +42,10 @@ pattern = r'(?im)^(\s*include\s*=\s*)Core[\\/]\s*(?:EFMI|APMI)[\\/]main\.ini\s*$
 updated, count = re.subn(pattern, lambda m: m[1] + 'Core\\APMI\\main.ini', text)
 if count != 1:
     raise ValueError('Expected one active EFMI/APMI Core include; no files changed')
+rendering = r'(?im)^\[Rendering\][ \t]*\r?\n(?:(?!^\[)[\s\S])*'
+updated, count = re.subn(rendering, lambda m: enable_constant_buffer_cache(m[0]), updated)
+if count != 1:
+    raise ValueError('Expected one Rendering section; no files changed')
 for filename in ('d3d11.dll', 'd3dcompiler_47.dll'):
     if hashlib.sha256((target / filename).read_bytes()).digest() != hashlib.sha256((ROOT / filename).read_bytes()).digest():
         raise ValueError('Target runtime differs from the tested runtime: ' + filename)
@@ -35,7 +59,7 @@ for relative in ('Skinning.ini', 'Shaders/Skinning.hlsl'):
     old_file = target / 'Core/APMI' / relative
     old_file.unlink(missing_ok=True)
 ini.write_text(updated, encoding='utf-8', newline='')
-report = {'target': str(target), 'backup': str(backup), 'core': 'APMIv1 0.3.0',
+report = {'target': str(target), 'backup': str(backup), 'core': 'APMIv1 0.3.1',
           'files': {str(p.relative_to(target)): hashlib.sha256(p.read_bytes()).hexdigest()
                     for p in (target / 'Core/APMI').rglob('*') if p.is_file()},
           'previous_ini_sha256': hashlib.sha256(original).hexdigest(),

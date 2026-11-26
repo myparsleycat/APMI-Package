@@ -1,6 +1,6 @@
 # APMI Package
 
-Azur Promilia runtime configuration and APMI Core 0.3.0, with frame-dump extraction and standalone Blender import/export tools.
+Azur Promilia runtime configuration and APMI Core 0.3.1, with frame-dump extraction and standalone Blender import/export tools.
 
 Use this directory as the APMI Package in [APMI Launcher](https://github.com/loyal37/APMI-Launcher) after supplying the compatible XXMI 1.3.3 `d3d11.dll` and `d3dcompiler_47.dll`. The runtime files are `d3dx.ini` and `Core/APMI/`. Put mod folders in `Mods/`.
 
@@ -11,8 +11,9 @@ The Core configuration and UI helpers build on [EFMI-Package](https://github.com
 The exporter uses the entry-point and draw-command layout of LoyalTools' merged-skeleton EFMI template. `TextureOverride_EntryPoint_ComponentN` matches the original draw and sets its callback. `CommandList_Component_DrawInstances` calls Core. `CommandList_Draw_ComponentN` binds the replacement buffers and issues the draw. Buffer resource names use `Resource_<IB>_<IndexCount>_<FirstIndex>_<Category>` and file names use `Meshes\<IB>-<IndexCount>-<FirstIndex>-<Category>.buf`.
 
 - Native one-, two- and four-influence variants read source PNT from `cs-t0`, weights/indices from `cs-t1` and 64-byte bone matrices from `cs-t2`.
-- Blender projects and mod exports use 40-byte PNT and a canonical 32-byte float4/uint4 blend stream. The project retains the component number, bone indices and captured matrices for future merged-skeleton work.
+- Blender projects and mod exports use 40-byte PNT and a canonical 32-byte float4/uint4 blend stream. APMI-Tools can export a separate field Blend keyed by the native blend hash, influence count and palette size.
 - `Core/APMI/main.ini` hooks the observed AP shader variants. `API.ini` copies each native palette, looks it up by the character's current or previous position buffer, and runs `CustomShaderMeshSkinner`. Core owns the compute bindings and dispatch. It restores the game's bindings after each replacement draw.
+- `MergedSkinning.ini` gathers verified donor matrices from the same actor's previous complete frame. Missing or ambiguous donor snapshots keep the original draw. A merged motion pass uses its replacement current position for `vb3` if it has no compatible previous blend and palette.
 - Core allocates replacement position buffers at the exported mesh size. The private F10 test reloaded a 65-vertex mod while the original three-vertex buffers were already allocated.
 
 Common UI/text helpers originate from the owner's EFMI package; Endfield-specific skeleton, merged-pool and shape-key code was not carried over. Source hashes are recorded in [UPSTREAM.json](UPSTREAM.json).
@@ -23,7 +24,7 @@ To deploy Core into an existing compatible working package, with its old Core an
 py -3.12 scripts/deploy_core.py 'F:/APMI Launcher/dist/APMI'
 ```
 
-This changes the active Core include and copies `Core/APMI`. It retains the installation's runtime DLLs, Mods and other INI settings. Reload with F10 or restart through APMI Launcher. The development runtime DLLs must be supplied locally and match the tested copies before deployment.
+This updates the active Core include, enables constant-buffer data caching for Merged Skeleton and copies `Core/APMI`. Reload with F10 or restart through APMI Launcher. The development runtime DLLs must be supplied locally and match the tested copies before deployment.
 
 ## Extract, import and export
 
@@ -40,7 +41,7 @@ Omit `--ib` to extract all recognized components, or repeat it to select several
 
 Blender objects retain AP's native coordinates, component identity, source-vertex references, UVs, point colors and `Bone_####` vertex groups. Preserve the `ap_source_vertex` attribute. Apply mesh modifiers before exporting. A component supports one to four nonzero weights per vertex, within its captured palette. UV seams create new exported vertices as needed. Shared zero-stride attributes expand to a per-vertex stream when edited. Mirrored object transforms reverse triangle winding. `--recalculate-normals` regenerates normals and tangents; the default preserves original normal/tangent bytes.
 
-The tools retain texture binding evidence and extract DDS files, but do not guess material roles or construct an armature hierarchy from animated skin matrices. Texture replacement, automatic character/LOD grouping, merged skeletons, shape keys and arbitrary unobserved rendering pipelines are outside this initial implementation. Geometry-only round trips preserve the game's material bindings.
+The standalone tools retain texture binding evidence and extract DDS files. Geometry-only round trips preserve the game's material bindings. Use APMI-Tools for Blender export with a field capture and Merged Skeleton.
 
 ## Verification
 
