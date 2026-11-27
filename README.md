@@ -17,15 +17,9 @@ The exporter uses the entry-point and draw-command layout of LoyalTools' merged-
 - `MergedSkinning.ini` gathers verified donor matrices from the same actor's previous complete frame. Missing or ambiguous donor snapshots keep the original draw. A merged motion pass uses its replacement current position for `vb3` if it has no compatible previous blend and palette.
 - Core allocates replacement position buffers at the exported mesh size. The private F10 test reloaded a 65-vertex mod while the original three-vertex buffers were already allocated.
 
-Legacy mods can read the global `$costume_mods` switch from `d3dx.ini`. F11 suspends legacy mods and restores their previous switch value when re-enabled. To run a legacy `cs-u0` override on a skinning shader handled by Core, call the output check from a texture override keyed to the mesh's native `cs-t0` hash. Replace `12345678` with the hash from the target dispatch.
+Legacy mods can read the global `$costume_mods` switch from `d3dx.ini`. F11 suspends legacy mods and restores their previous switch value when re-enabled. Legacy mods keyed to the native output buffer run unchanged: while `$costume_mods` is set, Core checks `cs-u0` overrides on a skinning dispatch it handles if a draw with an IB override read that output buffer in the last eight presented frames. The output hash depends only on the buffer description. A mesh with the same vertex count triggers the override only if another mod also replaces its draw. A legacy replacement starts one or two frames after its mesh first appears.
 
-```ini
-[TextureOverrideLegacySkinningInput]
-hash = 12345678
-pre run = CommandList\APMIv1\CheckLegacySkinningOutput
-```
-
-The mod's existing `cs-u0` override runs only after the input match. For a shader outside Core's skinning list, use a `ShaderOverride` for that compute shader and match `cs-t0` before calling the same command list.
+For a compute shader outside Core's skinning list, add a `ShaderOverride` for that shader that matches the mesh's native `cs-t0` hash and calls `CommandList\APMIv1\CheckLegacySkinningOutput`. On a skinning dispatch handled by Core, a texture override that calls the same command list from the `cs-t0` hash replaces Core's output check for that dispatch, so the legacy override still runs once.
 
 Common UI/text helpers originate from the owner's EFMI package; Endfield-specific skeleton, merged-pool and shape-key code was not carried over. Source hashes are recorded in [UPSTREAM.json](UPSTREAM.json).
 
