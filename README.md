@@ -17,6 +17,16 @@ The exporter uses the entry-point and draw-command layout of LoyalTools' merged-
 - `MergedSkinning.ini` gathers verified donor matrices from the same actor's previous complete frame. Missing or ambiguous donor snapshots keep the original draw. A merged motion pass uses its replacement current position for `vb3` if it has no compatible previous blend and palette.
 - Core allocates replacement position buffers at the exported mesh size. The private F10 test reloaded a 65-vertex mod while the original three-vertex buffers were already allocated.
 
+Legacy mods can read the global `$costume_mods` switch from `d3dx.ini`. F11 suspends legacy mods and restores their previous switch value when re-enabled. To run a legacy `cs-u0` override on a skinning shader handled by Core, call the output check from a texture override keyed to the mesh's native `cs-t0` hash. Replace `12345678` with the hash from the target dispatch.
+
+```ini
+[TextureOverrideLegacySkinningInput]
+hash = 12345678
+pre run = CommandList\APMIv1\CheckLegacySkinningOutput
+```
+
+The mod's existing `cs-u0` override runs only after the input match. For a shader outside Core's skinning list, use a `ShaderOverride` for that compute shader and match `cs-t0` before calling the same command list.
+
 Common UI/text helpers originate from the owner's EFMI package; Endfield-specific skeleton, merged-pool and shape-key code was not carried over. Source hashes are recorded in [UPSTREAM.json](UPSTREAM.json).
 
 To deploy Core into an existing compatible working package, with its old Core and INI backed up under `build/deployment-*`:
@@ -25,7 +35,7 @@ To deploy Core into an existing compatible working package, with its old Core an
 py -3.12 scripts/deploy_core.py 'F:/APMI Launcher/dist/APMI'
 ```
 
-This updates the active Core include, enables constant-buffer data caching for Merged Skeleton and copies `Core/APMI`. Reload with F10 or restart through APMI Launcher. The development runtime DLLs must be supplied locally and match the tested copies before deployment.
+This updates the active Core include, enables constant-buffer data caching for Merged Skeleton, declares `$costume_mods` if absent and copies `Core/APMI`. Reload with F10 or restart through APMI Launcher. The development runtime DLLs must be supplied locally and match the tested copies before deployment.
 
 ## Extract, import and export
 
@@ -78,6 +88,8 @@ The game check covers the selected component on the tested character. Other char
 
 ```powershell
 & scripts/build-tests.ps1
+py -3.12 tests/legacy_skinning_runtime.py --runtime '<folder-containing-XXMI-DLLs>'
+py -3.12 tests/deploy_core_rollback.py
 py -3.12 tools/verify_skinning.py '<dump-folder>' --out build/skinning-gpu.json --gpu build/skin_gpu.exe
 & 'D:/blender4,5/blender.exe' --background --factory-startup --python-exit-code 1 --python tests/blender_roundtrip.py -- build/model build/roundtrip-check
 py -3.12 tests/core_runtime.py --launcher 'F:/APMI Launcher' --native-shader 'F:/APMI Launcher/build/apmi-pipeline-20261126/shaders/shaders/3b4f1b1749cd3030-cs.bin'
